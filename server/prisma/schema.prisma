@@ -1,0 +1,79 @@
+datasource postgres {
+  provider = "postgresql"
+  url      = env("POSTGRESQL_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  createdAt     DateTime       @default(now())
+  firstName     String?
+  id            String         @id @default(cuid())
+  lastName      String?
+  password      String
+  roles         String[]
+  subscriptions Subscription[]
+  updatedAt     DateTime       @updatedAt
+  username      String         @unique
+}
+
+model SubscriptionGroup {
+  createdAt  DateTime                          @default(now())
+  groupType  EnumSubscriptionGroupGroupType[]
+  id         String                            @id @default(cuid())
+  name       String?
+  plans      Plan[]
+  updatedAt  DateTime                          @updatedAt
+  visibility EnumSubscriptionGroupVisibility[]
+}
+
+model Plan {
+  amount              Float?
+  createdAt           DateTime            @default(now())
+  currency            String?
+  duration            String?
+  id                  String              @id @default(cuid())
+  name                String?
+  subscriptionGroup   SubscriptionGroup?  @relation(fields: [subscriptionGroupId], references: [id])
+  subscriptionGroupId String?
+  subscriptions       Subscription[]
+  updatedAt           DateTime            @updatedAt
+  visibility          EnumPlanVisibility?
+}
+
+model Subscription {
+  createdAt  DateTime                @default(now())
+  customer   User?                   @relation(fields: [customerId], references: [id])
+  customerId String?
+  endDate    DateTime?
+  id         String                  @id @default(cuid())
+  plan       Plan?                   @relation(fields: [planId], references: [id])
+  planId     String?
+  startDate  DateTime?
+  status     EnumSubscriptionStatus?
+  updatedAt  DateTime                @updatedAt
+}
+
+enum EnumSubscriptionGroupGroupType {
+  Campaign
+  Standard
+}
+
+enum EnumSubscriptionGroupVisibility {
+  private
+  public
+}
+
+enum EnumPlanVisibility {
+  Private
+  Public
+}
+
+enum EnumSubscriptionStatus {
+  NotStarted
+  InProgress
+  Expired
+  Initiated
+}
